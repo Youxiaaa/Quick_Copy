@@ -78,7 +78,7 @@ onMounted(() => {
     <li v-show="isAdding" class="px-4 mt-2">
       <div class="rounded-10px overflow-hidden relative w-full h-9">
         <div class="absolute top-0 left-0 w-full h-full border-gradient"></div>
-        <input v-model="textModel" @keyup.enter="handleAddText" type="text" class="absolute w-[calc(100%-4px)] left-2px h-[calc(100%-4px)] top-2px rounded-8px px-2 py-1 focus:outline-none text-sm text-stone-500">
+        <input v-model="textModel" @keyup.esc="isAdding = false, textModel = ''" @keyup.enter="handleAddText" type="text" class="absolute w-[calc(100%-4px)] left-2px h-[calc(100%-4px)] top-2px rounded-8px px-2 py-1 focus:outline-none text-sm text-stone-500">
       </div>
     </li>
 
