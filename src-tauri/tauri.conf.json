@@ -1,0 +1,52 @@
+{
+  "build": {
+    "beforeDevCommand": "pnpm dev",
+    "beforeBuildCommand": "pnpm build",
+    "devPath": "http://localhost:1420",
+    "distDir": "../dist",
+    "withGlobalTauri": false
+  },
+  "package": {
+    "productName": "Quick Copy",
+    "version": "0.0.0"
+  },
+  "tauri": {
+    "systemTray": {
+      "iconPath": "icons/rocket.ico",
+      "menuOnLeftClick": false,
+      "iconAsTemplate": false
+    },
+    "allowlist": {
+      "all": false,
+      "shell": {
+        "all": false,
+        "open": true
+      }
+    },
+    "bundle": {
+      "active": true,
+      "targets": "all",
+      "identifier": "com.youxiaaa.quick-copy",
+      "icon": [
+        "icons/rocket.ico"
+      ]
+    },
+    "security": {
+      "csp": null
+    },
+    "windows": [
+      {
+        "alwaysOnTop": true,
+        "hiddenTitle": true,
+        "skipTaskbar": true,
+        "fullscreen": false,
+        "resizable": false,
+        "decorations": false,
+        "title": "Quick Copy",
+        "width": 300,
+        "height": 400,
+        "visible": false
+      }
+    ]
+  }
+}
