@@ -83,7 +83,7 @@ onMounted(() => {
     </li>
 
     <li class="flex justify-center mt-2">
-      <button @click="isAdding = true" class="w-1/2 bg-green-400 border border-black py-1">ADD</button>
+      <button v-show="!isAdding" @click="isAdding = true" class="w-1/2 bg-green-400 border border-black py-1">ADD</button>
     </li>
   </ul>
 </template>
