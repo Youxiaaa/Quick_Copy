@@ -59,53 +59,66 @@ const handleCopy = (text: string) => {
   handleHideWindow()
 }
 
+const onAddClick = () => {
+  isAdding.value = true
+  setTimeout(() => {
+    const title = document.getElementById('add__title')
+    title?.focus()
+  }, 50);
+}
+
 onMounted(() => {
   setupCopyList()
 })
 </script>
 
 <template>
-  <ul class="w-full h-screen overflow-auto pb-4 backdrop-blur-md space-y-2 p-4">
-    <li v-for="item in copyList" :key="item.id" @mouseover="editId = item.id" @mouseleave="editId = ''" class="relative px-4 py-2 border border-black rounded-md">
-      <div>
-        <p class="line-clamp-1 text-lg fw-700 text-stroke-black">{{ item.title }}</p>
-        <p class="text-sm fw-700 text-stone-500 whitespace-pre-line">{{ item.label }}</p>
-      </div>
-
-      <button v-show="editId === item.id" @click="handleCopy(item.label)" class="absolute w-1/2 h-full top-0 left-0 bg-stone/25 hover:bg-stone/50 flex items-center justify-center">
-        <img src="./assets/copy.svg" alt="Copy the text" class="w-5 h-5">
-      </button>
-      <button v-show="editId === item.id" @click="handleDelete(item.id)" class="absolute w-1/2 h-full top-0 left-1/2 bg-stone/25 hover:bg-stone/50 flex items-center justify-center">
-        <img src="./assets/delete.svg" alt="Delete the text" class="w-5 h-5">
-      </button>
-
-    </li>
-    <li v-if="copyList.length === 0 && !isAdding" class="text-black font-bold text-center mt-30 text-xl">
-      <p>目前沒有資料唷</p>
-    </li>
-
-    <li v-if="isAdding" class="space-y-2">
-      <input type="text"
-        v-model="copyTitle"
-        placeholder="請輸入標題"
-        class="w-full focus:outline-none text-sm text-stone-500 p-2 border border-black rounded-md"
-      >
-      <textarea
-        v-model="textModel"
-        placeholder="請輸入文字"
-        rows="5"
-        class="w-full focus:outline-none text-sm text-stone-500 p-2 border border-black rounded-md"
-      />
-      <div class="flex items-center gap-2">
-        <button @click="isAdding = false, textModel = ''" class="w-full py-2 bg-white border border-black rounded-md">取消</button>
-        <button @click="handleAddCopy" class="w-full py-2 bg-black text-white border border-black rounded-md">新增</button>
-      </div>
-    </li>
-
-    <li class="w-full flex justify-center">
-      <button v-if="!isAdding" @click="isAdding = true" class="w-full border border-black py-2 rounded-md bg-white shadow-md hover:bg-black hover:text-white duration-300">新增</button>
-    </li>
-  </ul>
+  <section>
+    <ul
+      class="w-full overflow-auto backdrop-blur-md space-y-2 px-4 pt-4 h-[calc(100dvh-80px)]"
+    >
+      <li v-for="item in copyList" :key="item.id" @mouseover="editId = item.id" @mouseleave="editId = ''" class="relative px-4 py-2 border border-black rounded-md">
+        <div>
+          <p class="line-clamp-1 text-lg fw-700 text-stroke-black">{{ item.title }}</p>
+          <p class="text-sm fw-700 text-stone-500 whitespace-pre-line line-clamp-2">{{ item.label }}</p>
+        </div>
+  
+        <button v-show="editId === item.id" @click="handleCopy(item.label)" class="absolute w-1/2 h-full top-0 left-0 bg-#b7ff4a/25 hover:bg-#b7ff4a/50 flex items-center justify-center">
+          <img src="./assets/copy.svg" alt="Copy the text" class="w-5 h-5">
+        </button>
+        <button v-show="editId === item.id" @click="handleDelete(item.id)" class="absolute w-1/2 h-full top-0 left-1/2 bg-red/25 hover:bg-red/50 flex items-center justify-center">
+          <img src="./assets/delete.svg" alt="Delete the text" class="w-5 h-5">
+        </button>
+  
+      </li>
+      <li v-if="copyList.length === 0 && !isAdding" class="text-black font-bold text-center mt-30 text-lg whitespace-nowrap">
+        <p>哦！你還沒有新增快速複製唷</p>
+      </li>
+  
+      <li v-if="isAdding" class="space-y-2 p-2 bg-gray-200 rounded-md">
+        <input
+          id="add__title"
+          type="text"
+          v-model="copyTitle"
+          placeholder="請輸入標題"
+          class="w-full focus:outline-none text-sm text-stone-500 p-2 border border-black rounded-md"
+        >
+        <textarea
+          v-model="textModel"
+          placeholder="請輸入文字"
+          rows="5"
+          class="w-full focus:outline-none text-sm text-stone-500 p-2 border border-black rounded-md"
+        />
+      </li>
+    </ul>
+    <div v-if="isAdding" class="fixed bottom-0 w-full p-4 bg-white flex items-center gap-2">
+      <button @click="isAdding = false, textModel = ''" class="w-full py-2 bg-white border border-black rounded-md">取消</button>
+      <button @click="handleAddCopy" class="w-full py-2 bg-black text-white border border-black rounded-md">新增</button>
+    </div>
+    <div v-if="!isAdding" class="fixed bottom-0 w-full p-4 bg-white">
+      <button @click="onAddClick" class="w-full border border-black py-2 rounded-md bg-white shadow-md hover:bg-black hover:text-white duration-300">新增</button>
+    </div>
+  </section>
 </template>
 
 <style>
