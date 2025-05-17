@@ -7,6 +7,9 @@ license = ""
 repository = ""
 edition = "2021"
 
+[patch.crates-io]
+time = { git = "https://github.com/time-rs/time.git", tag = "v0.3.41" }
+
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [build-dependencies]

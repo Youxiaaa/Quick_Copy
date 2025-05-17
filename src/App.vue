@@ -4,6 +4,7 @@ import { invoke } from '@tauri-apps/api/tauri'
 
 interface CopyList {
   id: string
+  title: string
   label: string
   isEdit: boolean
 }
@@ -20,20 +21,23 @@ const setupCopyList = () => {
   isAdding.value = false
 }
 
+const copyTitle = ref('')
 const textModel = ref('')
-const handleAddText = () => {
+const handleAddCopy = () => {
   const newText = textModel.value.trim()
 
-  if (!newText) return
+  if (!newText || !copyTitle.value) return
 
   const payload = {
     id: new Date().getTime().toString(),
+    title: copyTitle.value,
     label: newText,
     isEdit: false
   }
   window.localStorage.setItem('copyList', JSON.stringify([...copyList.value, payload]))
   setupCopyList()
 
+  copyTitle.value = ''
   textModel.value = ''
 }
 
@@ -61,29 +65,45 @@ onMounted(() => {
 </script>
 
 <template>
-  <ul class="w-full h-screen overflow-auto background-gradient pb-4 backdrop-blur-md flex flex-col gap-y-1px">
-    <li v-for="item in copyList" :key="item.id" @mouseover="editId = item.id" @mouseleave="editId = ''" class="relative px-4 py-2 border border-black">
-      <p class="line-clamp-1 text-sm fw-700 text-stroke-black">{{ item.label }}</p>
+  <ul class="w-full h-screen overflow-auto pb-4 backdrop-blur-md space-y-2 p-4">
+    <li v-for="item in copyList" :key="item.id" @mouseover="editId = item.id" @mouseleave="editId = ''" class="relative px-4 py-2 border border-black rounded-md">
+      <div>
+        <p class="line-clamp-1 text-lg fw-700 text-stroke-black">{{ item.title }}</p>
+        <p class="text-sm fw-700 text-stone-500 whitespace-pre-line">{{ item.label }}</p>
+      </div>
 
-      <button v-show="editId === item.id" @click="handleCopy(item.label)" class="absolute w-1/2 h-full top-0 left-0 bg-white/25 hover:bg-white/50 backdrop-blur-sm flex items-center justify-center">
+      <button v-show="editId === item.id" @click="handleCopy(item.label)" class="absolute w-1/2 h-full top-0 left-0 bg-stone/25 hover:bg-stone/50 flex items-center justify-center">
         <img src="./assets/copy.svg" alt="Copy the text" class="w-5 h-5">
       </button>
-      <button v-show="editId === item.id" @click="handleDelete(item.id)" class="absolute w-1/2 h-full top-0 left-1/2 bg-white/25 hover:bg-white/50 backdrop-blur-sm flex items-center justify-center">
+      <button v-show="editId === item.id" @click="handleDelete(item.id)" class="absolute w-1/2 h-full top-0 left-1/2 bg-stone/25 hover:bg-stone/50 flex items-center justify-center">
         <img src="./assets/delete.svg" alt="Delete the text" class="w-5 h-5">
       </button>
 
     </li>
-    <li v-show="copyList.length === 0 && !isAdding" class="text-white fw-700 text-center mt-30">目前沒有資料唷</li>
+    <li v-if="copyList.length === 0 && !isAdding" class="text-black font-bold text-center mt-30 text-xl">
+      <p>目前沒有資料唷</p>
+    </li>
 
-    <li v-show="isAdding" class="px-4 mt-2">
-      <div class="rounded-10px overflow-hidden relative w-full h-9">
-        <div class="absolute top-0 left-0 w-full h-full border-gradient"></div>
-        <input v-model="textModel" @keyup.esc="isAdding = false, textModel = ''" @keyup.enter="handleAddText" type="text" class="absolute w-[calc(100%-4px)] left-2px h-[calc(100%-4px)] top-2px rounded-8px px-2 py-1 focus:outline-none text-sm text-stone-500">
+    <li v-if="isAdding" class="space-y-2">
+      <input type="text"
+        v-model="copyTitle"
+        placeholder="請輸入標題"
+        class="w-full focus:outline-none text-sm text-stone-500 p-2 border border-black rounded-md"
+      >
+      <textarea
+        v-model="textModel"
+        placeholder="請輸入文字"
+        rows="5"
+        class="w-full focus:outline-none text-sm text-stone-500 p-2 border border-black rounded-md"
+      />
+      <div class="flex items-center gap-2">
+        <button @click="isAdding = false, textModel = ''" class="w-full py-2 bg-white border border-black rounded-md">取消</button>
+        <button @click="handleAddCopy" class="w-full py-2 bg-black text-white border border-black rounded-md">新增</button>
       </div>
     </li>
 
-    <li class="flex justify-center mt-2">
-      <button v-show="!isAdding" @click="isAdding = true" class="w-1/2 bg-green-400 border border-black py-1">ADD</button>
+    <li class="w-full flex justify-center">
+      <button v-if="!isAdding" @click="isAdding = true" class="w-full border border-black py-2 rounded-md bg-white shadow-md hover:bg-black hover:text-white duration-300">新增</button>
     </li>
   </ul>
 </template>
