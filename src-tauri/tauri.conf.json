@@ -7,12 +7,12 @@
     "withGlobalTauri": false
   },
   "package": {
-    "productName": "Quick Copy",
+    "productName": "R&C TodoList",
     "version": "0.0.0"
   },
   "tauri": {
     "systemTray": {
-      "iconPath": "icons/rocket.ico",
+      "iconPath": "icons/todo.ico",
       "menuOnLeftClick": false,
       "iconAsTemplate": false
     },
@@ -28,7 +28,7 @@
       "targets": "all",
       "identifier": "com.youxiaaa.quick-copy",
       "icon": [
-        "icons/rocket.ico"
+        "icons/todo.ico"
       ]
     },
     "security": {

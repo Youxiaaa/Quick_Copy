@@ -1,171 +1,177 @@
 <script lang="ts" setup>
 import { onMounted, ref } from 'vue'
-import { invoke } from '@tauri-apps/api/tauri'
 
-interface CopyList {
+interface TodoItem {
   id: string
-  title: string
   label: string
   isEdit: boolean
 }
 
-const isAdding = ref(false)
-
-const copyList = ref<CopyList[]>([])
-const setupCopyList = () => {
-  const copyCache = window.localStorage.getItem('copyList')
-
-  if (!copyCache) return
-
-  copyList.value = JSON.parse(copyCache)
-  isAdding.value = false
+const todoList = ref<TodoItem[]>([])
+const setupTodoList = () => {
+  const cache = window.localStorage.getItem('todoList')
+  if (cache) todoList.value = JSON.parse(cache)
 }
 
-const copyTitle = ref('')
-const textModel = ref('')
-const handleAddCopy = () => {
-  const newText = textModel.value.trim()
+const addTextRef = ref('')
+const editTextRef = ref('')
+const editItem = ref<TodoItem | null>(null)
+const isComposing = ref(false)
 
-  if (!newText || !copyTitle.value) return
-
-  const payload = {
-    id: new Date().getTime().toString(),
-    title: copyTitle.value,
-    label: newText,
+const handleAddTodo = () => {
+  const text = addTextRef.value.trim()
+  if (!text) return
+  const newItem: TodoItem = {
+    id: Date.now().toString(),
+    label: text,
     isEdit: false
   }
-  window.localStorage.setItem('copyList', JSON.stringify([...copyList.value, payload]))
-  setupCopyList()
-
-  copyTitle.value = ''
-  textModel.value = ''
+  window.localStorage.setItem(
+    'todoList',
+    JSON.stringify([...todoList.value, newItem])
+  )
+  setupTodoList()
+  addTextRef.value = ''
 }
-
-const editId = ref('')
 
 const handleDelete = (id: string) => {
-  const newCopyList = copyList.value.filter(item => item.id !== id)
-  window.localStorage.setItem('copyList', JSON.stringify(newCopyList))
-  setupCopyList()
+  const filtered = todoList.value.filter(i => i.id !== id)
+  window.localStorage.setItem('todoList', JSON.stringify(filtered))
+  setupTodoList()
 }
 
-// 呼叫 Rust 關閉視窗
-const handleHideWindow = () => {
-  invoke('tauri', { cmd: 'hide_window' })
+const onEditClick = (item: TodoItem) => {
+  editItem.value = item
+  editTextRef.value = item.label
+  setTimeout(() => {
+    document.getElementById(`edit-input-${item.id}`)?.focus()
+  }, 50)
 }
 
-const handleCopy = (text: string) => {
-  navigator.clipboard.writeText(text)
-  handleHideWindow()
+const handleEditTodo = () => {
+  if (!editItem.value) return
+  const updated = todoList.value.map(i =>
+    i.id === editItem.value!.id
+      ? { ...i, label: editTextRef.value }
+      : i
+  )
+  window.localStorage.setItem('todoList', JSON.stringify(updated))
+  setupTodoList()
+  editItem.value = null
+  editTextRef.value = ''
+}
+
+// 組字開始／結束
+const onCompositionStart = () => { isComposing.value = true }
+const onCompositionEnd = () => { isComposing.value = false }
+
+// 新增輸入框按下 Enter
+const onAddKeydown = (e: KeyboardEvent) => {
+  // Safari 中文輸入階段 keyCode 會是 229；其他瀏覽器可以用 e.isComposing
+  const composing = e.isComposing || e.keyCode === 229 || isComposing.value
+  if (e.key === 'Enter' && !composing) {
+    e.preventDefault()
+    handleAddTodo()
+  }
+}
+
+// 編輯輸入框按下 Enter
+const onEditKeydown = (e: KeyboardEvent) => {
+  const composing = e.isComposing || e.keyCode === 229 || isComposing.value
+  if (e.key === 'Enter' && !composing) {
+    e.preventDefault()
+    handleEditTodo()
+  }
+}
+
+const handleCancelEdit = () => {
+  editItem.value = null
+  editTextRef.value = ''
 }
 
 onMounted(() => {
-  setupCopyList()
+  setupTodoList()
 })
 </script>
 
 <template>
-  <ul class="w-full h-screen overflow-auto pb-4 backdrop-blur-md space-y-2 p-4">
-    <li v-for="item in copyList" :key="item.id" @mouseover="editId = item.id" @mouseleave="editId = ''" class="relative px-4 py-2 border border-black rounded-md">
-      <div>
-        <p class="line-clamp-1 text-lg fw-700 text-stroke-black">{{ item.title }}</p>
-        <p class="text-sm fw-700 text-stone-500 whitespace-pre-line">{{ item.label }}</p>
-      </div>
-
-      <button v-show="editId === item.id" @click="handleCopy(item.label)" class="absolute w-1/2 h-full top-0 left-0 bg-stone/25 hover:bg-stone/50 flex items-center justify-center">
-        <img src="./assets/copy.svg" alt="Copy the text" class="w-5 h-5">
-      </button>
-      <button v-show="editId === item.id" @click="handleDelete(item.id)" class="absolute w-1/2 h-full top-0 left-1/2 bg-stone/25 hover:bg-stone/50 flex items-center justify-center">
-        <img src="./assets/delete.svg" alt="Delete the text" class="w-5 h-5">
-      </button>
-
-    </li>
-    <li v-if="copyList.length === 0 && !isAdding" class="text-black font-bold text-center mt-30 text-xl">
-      <p>目前沒有資料唷</p>
-    </li>
-
-    <li v-if="isAdding" class="space-y-2">
-      <input type="text"
-        v-model="copyTitle"
-        placeholder="請輸入標題"
-        class="w-full focus:outline-none text-sm text-stone-500 p-2 border border-black rounded-md"
-      >
-      <textarea
-        v-model="textModel"
-        placeholder="請輸入文字"
-        rows="5"
-        class="w-full focus:outline-none text-sm text-stone-500 p-2 border border-black rounded-md"
+  <section class="w-full h-screen bg-#B3B7EE p-2 space-y-4">
+    <!-- 新增區 -->
+    <div class="sticky top-2 bg-white flex items-center outline outline-2px outline-black rounded-md overflow-hidden">
+      <input
+        v-model="addTextRef"
+        @compositionstart="onCompositionStart"
+        @compositionupdate="onCompositionStart"
+        @compositionend="onCompositionEnd"
+        @keydown="onAddKeydown"
+        type="text"
+        class="w-full py-2 px-4 placeholder:text-sm focus:outline-none text-sm"
+        placeholder="請輸入待辦事項..."
       />
-      <div class="flex items-center gap-2">
-        <button @click="isAdding = false, textModel = ''" class="w-full py-2 bg-white border border-black rounded-md">取消</button>
-        <button @click="handleAddCopy" class="w-full py-2 bg-black text-white border border-black rounded-md">新增</button>
-      </div>
-    </li>
+      <button @click="handleAddTodo" class="w-10 h-10 outline outline-black bg-#9395D3 text-white text-xl">
+        <img src="./assets/add.svg" alt="add" class="w-5 h-5 stroke-white mx-auto bg-transparent">
+      </button>
+    </div>
 
-    <li class="w-full flex justify-center">
-      <button v-if="!isAdding" @click="isAdding = true" class="w-full border border-black py-2 rounded-md bg-white shadow-md hover:bg-black hover:text-white duration-300">新增</button>
-    </li>
-  </ul>
+    <!-- 列表區，帶 TransitionGroup -->
+    <Transition name="fade" mode="out-in">
+      <TransitionGroup v-if="todoList.length > 0" name="fade" tag="ul" class="space-y-2">
+        <li
+          v-for="item in todoList.slice().reverse()"
+          :key="item.id"
+          class="flex items-center justify-between rounded-md p-4 shadow-[0px_4px_4px_0px_#00000040] bg-white hover:outline hover:outline-2px hover:outline-black"
+        >
+          <!-- 顯示 or 編輯 切換 -->
+          <div class="flex-1">
+            <template v-if="item.id !== editItem?.id">
+              <p @dblclick="onEditClick(item)" class="text-sm">{{ item.label }}</p>
+            </template>
+            <template v-else>
+              <input
+                v-model="editTextRef"
+                @compositionstart="onCompositionStart"
+                @compositionupdate="onCompositionStart"
+                @compositionend="onCompositionEnd"
+                @keydown="onEditKeydown"
+                @blur="handleCancelEdit"
+                :id="`edit-input-${item.id}`"
+                type="text"
+                class="w-full placeholder:text-sm bg-stone-100 mr-2 text-sm focus:outline-none"
+              />
+            </template>
+          </div>
+          <!-- 按鈕 -->
+          <div class="flex items-center space-x-2">
+            <button @click="onEditClick(item)" class="px-1 bg-white">
+              <img src="./assets/edit.svg" alt="edit" class="w-5 h-5" />
+            </button>
+            <button @click="handleDelete(item.id)" class="px-1 bg-white">
+              <img src="./assets/delete.svg" alt="delete" class="w-5 h-5" />
+            </button>
+          </div>
+        </li>
+      </TransitionGroup>
+      <p v-else class="text-center text-xl text-black/80 font-bold pt-20 fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 whitespace-nowrap pb-20">
+        Nice! 目前沒有待辦事項～
+      </p>
+    </Transition>
+  </section>
 </template>
 
 <style>
-*::-webkit-scrollbar {
-  width: 7px;
-}
+*::-webkit-scrollbar { width: 7px; }
+*::-webkit-scrollbar-thumb { border-radius: 4px; background-color: #b7ff4a; border: 1px solid slategrey; }
 
-*::-webkit-scrollbar-button {
-  background: transparent;
-  border-radius: 4px;
+.fade-enter-active,
+.fade-leave-active {
+  transition: opacity 0.4s;
 }
-
-*::-webkit-scrollbar-track-piece {
-  background: transparent;
+.fade-enter-from,
+.fade-leave-to {
+  opacity: 0;
 }
-
-*::-webkit-scrollbar-thumb {
-  border-radius: 4px;
-  background-color: #b7ff4a;
-  border: 1px solid slategrey;
-}
-
-*::-webkit-scrollbar-track {
-  box-shadow: transparent;
-}
-
-.bg-gradient-animation {
-  animation: gradient 1s infinite linear;
-}
-
-.background-gradient {
-	background: linear-gradient(0deg, #4ccaf7, #23d5ab, #23d5ab, #4ccaf7);
-	background-size: 400% 400%;
-	animation: backgroundgradient 4s infinite linear;
-}
-
-@keyframes backgroundgradient {
-  0% {
-    background-position: 0% 0%;
-  }
-  100% {
-    background-position: 0% 400%;
-  }
-}
-
-.border-gradient {
-	background: linear-gradient(-45deg, #ee7752, #e73c7e, #23a6d5, #23d5ab);
-	background-size: 400% 400%;
-	animation: gradient 1s ease infinite;
-}
-
-@keyframes gradient {
-	0% {
-		background-position: 0% 50%;
-	}
-	50% {
-		background-position: 100% 50%;
-	}
-	100% {
-		background-position: 0% 50%;
-	}
+.fade-enter-to,
+.fade-leave-from {
+  opacity: 1;
 }
 </style>
