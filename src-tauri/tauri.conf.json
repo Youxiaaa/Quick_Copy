@@ -26,7 +26,7 @@
     "bundle": {
       "active": true,
       "targets": "all",
-      "identifier": "com.youxiaaa.quick-copy",
+      "identifier": "com.youxiaaa.todo-list",
       "icon": [
         "icons/todo.ico"
       ]
@@ -42,7 +42,7 @@
         "fullscreen": false,
         "resizable": false,
         "decorations": false,
-        "title": "Quick Copy",
+        "title": "R&C Todo List",
         "width": 300,
         "height": 400,
         "visible": false

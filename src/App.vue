@@ -95,7 +95,7 @@ onMounted(() => {
 </script>
 
 <template>
-  <section class="w-full h-screen bg-#B3B7EE p-2 space-y-4">
+  <section class="w-full h-screen overflow-y-auto bg-#B3B7EE p-2 space-y-4">
     <!-- 新增區 -->
     <div class="sticky top-2 bg-white flex items-center outline outline-2px outline-black rounded-md overflow-hidden">
       <input
