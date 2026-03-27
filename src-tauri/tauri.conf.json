@@ -21,6 +21,9 @@
       "shell": {
         "all": false,
         "open": true
+      },
+      "globalShortcut": {
+        "all": true
       }
     },
     "bundle": {
@@ -44,7 +47,7 @@
         "decorations": false,
         "title": "Quick Copy",
         "width": 300,
-        "height": 400,
+        "height": 500,
         "visible": false
       }
     ]

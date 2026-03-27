@@ -1,4 +1,4 @@
-use tauri::{SystemTray, SystemTrayMenu, SystemTrayEvent, CustomMenuItem, SystemTrayMenuItem};
+use tauri::{SystemTray, SystemTrayMenu, SystemTrayEvent, CustomMenuItem, SystemTrayMenuItem, GlobalShortcutManager};
 use tauri::Manager;
 
 #[tauri::command]
@@ -54,6 +54,22 @@ fn main() {
             }
         })
         .plugin(tauri_plugin_positioner::init())
+        .setup(|app| {
+            let window = app.get_window("main").unwrap();
+            app.global_shortcut_manager()
+                .register("CmdOrCtrl+Shift+V", move || {
+                    if let Ok(visible) = window.is_visible() {
+                        if visible {
+                            let _ = window.hide();
+                        } else {
+                            let _ = window.show();
+                            let _ = window.set_focus();
+                        }
+                    }
+                })
+                .expect("failed to register global shortcut");
+            Ok(())
+        })
         .invoke_handler(tauri::generate_handler![hide_window])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
