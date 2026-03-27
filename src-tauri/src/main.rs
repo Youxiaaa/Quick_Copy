@@ -1,9 +1,36 @@
 use tauri::{SystemTray, SystemTrayMenu, SystemTrayEvent, CustomMenuItem, SystemTrayMenuItem, GlobalShortcutManager};
 use tauri::Manager;
+use std::sync::Mutex;
+
+struct LastPosition(Mutex<Option<(f64, f64)>>);
+
+fn save_and_hide(window: &tauri::Window, state: &LastPosition) {
+    if let Ok(pos) = window.outer_position() {
+        *state.0.lock().unwrap() = Some((pos.x as f64, pos.y as f64));
+    }
+    let _ = window.hide();
+}
+
+fn restore_and_show(window: &tauri::Window, state: &LastPosition) {
+    let pos = state.0.lock().unwrap().clone();
+    match pos {
+        Some((x, y)) => {
+            let _ = window.set_position(tauri::Position::Physical(tauri::PhysicalPosition {
+                x: x as i32,
+                y: y as i32,
+            }));
+        }
+        None => {
+            let _ = window.center();
+        }
+    }
+    let _ = window.show();
+    let _ = window.set_focus();
+}
 
 #[tauri::command]
-fn hide_window(window: tauri::Window) {
-    window.hide().unwrap();
+fn hide_window(window: tauri::Window, state: tauri::State<LastPosition>) {
+    save_and_hide(&window, &state);
 }
 
 fn main() {
@@ -15,25 +42,23 @@ fn main() {
         .add_item(hide);
 
     tauri::Builder::default()
+        .manage(LastPosition(Mutex::new(None)))
         .system_tray(SystemTray::new().with_menu(tray_menu))
         .on_system_tray_event(|app, event|
             {
                 match event {
                 SystemTrayEvent::LeftClick {
-                    position,
-                    size: _,
                     ..
                 } => {
                     let window = app.get_window("main").unwrap();
+                    let state = app.state::<LastPosition>();
                     match window.is_visible() {
                         Ok(visible) => {
                             if visible {
-                                window.hide().unwrap();
+                                save_and_hide(&window, &state);
                                 return
                             }
-                            window.show().unwrap();
-                            window.set_focus().unwrap();
-                            window.set_position(position).unwrap();
+                            restore_and_show(&window, &state);
                         },
                         Err(e) => eprintln!("Error checking window visibility: {:?}", e),
                     }
@@ -45,7 +70,8 @@ fn main() {
                       }
                       "hide" => {
                         let window = app.get_window("main").unwrap();
-                        window.hide().unwrap();
+                        let state = app.state::<LastPosition>();
+                        save_and_hide(&window, &state);
                       }
                       _ => {}
                     }
@@ -56,14 +82,15 @@ fn main() {
         .plugin(tauri_plugin_positioner::init())
         .setup(|app| {
             let window = app.get_window("main").unwrap();
+            let app_handle = app.handle();
             app.global_shortcut_manager()
                 .register("CmdOrCtrl+Shift+V", move || {
+                    let state = app_handle.state::<LastPosition>();
                     if let Ok(visible) = window.is_visible() {
                         if visible {
-                            let _ = window.hide();
+                            save_and_hide(&window, &state);
                         } else {
-                            let _ = window.show();
-                            let _ = window.set_focus();
+                            restore_and_show(&window, &state);
                         }
                     }
                 })

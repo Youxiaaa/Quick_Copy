@@ -325,9 +325,9 @@ onUnmounted(() => {
 
 <template>
   <section class="h-100dvh flex flex-col section-bg">
-    <!-- 頂部列 -->
-    <div class="flex items-center justify-between px-3 pt-2.5 pb-0 shrink-0">
-      <span class="text-[11px] fw-600 text-stone-400 dark:text-stone-500 tracking-wide">QUICK COPY</span>
+    <!-- 頂部列（可拖曳視窗） -->
+    <div data-tauri-drag-region class="flex items-center justify-between px-3 pt-2.5 pb-0 shrink-0 cursor-move">
+      <span data-tauri-drag-region class="text-[11px] fw-600 text-stone-400 dark:text-stone-500 tracking-wide">QUICK COPY</span>
       <button @click="toggleDarkMode" class="w-6 h-6 flex items-center justify-center rounded-full hover:bg-stone-200/60 dark:hover:bg-stone-700/60 transition-colors">
         <!-- 太陽 / 月亮 -->
         <svg v-if="isDark" class="w-3.5 h-3.5 text-amber-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">

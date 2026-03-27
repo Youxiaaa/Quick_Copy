@@ -43,11 +43,14 @@
         "hiddenTitle": true,
         "skipTaskbar": true,
         "fullscreen": false,
-        "resizable": false,
+        "resizable": true,
         "decorations": false,
         "title": "Quick Copy",
         "width": 300,
         "height": 500,
+        "minWidth": 250,
+        "minHeight": 300,
+        "center": true,
         "visible": false
       }
     ]
